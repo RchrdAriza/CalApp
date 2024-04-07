@@ -1,4 +1,5 @@
 import 'package:cal_app/config/providers/cal_value_provider.dart';
+import 'package:cal_app/presentation/screens/sidemenu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cal_app/config/providers/app_themes_provider.dart';
@@ -11,9 +12,40 @@ class CalScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkTheme = ref.watch(themeNotifierProvider).isDarkMode;
-
     final valueCal = ref.watch(calValueProvider);
 
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'CalApp',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        actions: [
+          IconButton(
+              onPressed: () {
+                ref.read(themeNotifierProvider.notifier).toggleDarkMode();
+              },
+              icon: isDarkTheme
+                  ? const Icon(Icons.dark_mode)
+                  : const Icon(Icons.light_mode)),
+        ],
+      ),
+      body: BodyApp(valueCal: valueCal),
+      drawer: const SideMenuCal(),
+    );
+  }
+}
+
+class BodyApp extends ConsumerWidget {
+  const BodyApp({
+    super.key,
+    required this.valueCal,
+  });
+
+  final String valueCal;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final isParenthesesOpen = ref.watch(isParenthesesOpenProvider);
 
     void onPressed(String value) {
@@ -24,11 +56,18 @@ class CalScreen extends ConsumerWidget {
       } else if (value == '=') {
         valueCal.contains('/0')
             ? ref.read(calValueProvider.notifier).state = byZero
-            : ref.read(calValueProvider.notifier).state =
-                eval(valueCal).toString();
+            : valueCal.isEmpty
+                ? ref.read(calValueProvider.notifier).state = ''
+                : ref.read(calValueProvider.notifier).state =
+                    eval(valueCal).toString();
       } else if (value == 'DEL') {
         ref.read(calValueProvider.notifier).state =
             valueCal.substring(0, valueCal.length - 1);
+        valueCal.endsWith('(')
+            ? ref.read(isParenthesesOpenProvider.notifier).state = false
+            : valueCal.endsWith(')')
+                ? ref.read(isParenthesesOpenProvider.notifier).state = true
+                : null;
       } else if (value == '()') {
         if (valueCal.isEmpty) {
           ref.read(calValueProvider.notifier).state += '(';
@@ -65,61 +104,48 @@ class CalScreen extends ConsumerWidget {
       }
     }
 
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text('CalApp'),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  ref.read(themeNotifierProvider.notifier).toggleDarkMode();
-                },
-                icon: isDarkTheme
-                    ? const Icon(Icons.dark_mode)
-                    : const Icon(Icons.light_mode)),
-          ],
-        ),
-        body: SafeArea(
-            child: SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                        flex: 3,
-                        child: SizedBox(
-                          height: double.infinity,
-                          width: double.infinity,
-                          child: Align(
-                            alignment: Alignment.bottomRight,
-                            child: Text(
-                              valueCal,
-                              style: const TextStyle(fontSize: 40),
-                            ),
-                          ),
-                        )),
-                    const SizedBox(
-                      height: 40,
-                    ),
-                    Expanded(
-                        flex: 8,
-                        child: SizedBox(
-                          height: double.infinity,
-                          width: double.infinity,
-                          child: GridView.count(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            children: [
-                              ...buttonList.map((index) => _ButtonCal(
-                                    onPressed: () => onPressed(index),
-                                    value: index,
-                                  )),
-                            ],
-                          ),
-                        )),
-                  ],
-                ))));
+    return SafeArea(
+        child: SizedBox(
+            height: double.infinity,
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: double.infinity,
+                      width: double.infinity,
+                      child: Align(
+                        alignment: Alignment.bottomRight,
+                        child: Text(
+                          valueCal,
+                          style: const TextStyle(fontSize: 40),
+                        ),
+                      ),
+                    )),
+                const SizedBox(
+                  height: 40,
+                ),
+                Expanded(
+                    flex: 8,
+                    child: SizedBox(
+                      height: double.infinity,
+                      width: double.infinity,
+                      child: GridView.count(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        children: [
+                          ...buttonList.map((index) => _ButtonCal(
+                                onPressed: () => onPressed(index),
+                                value: index,
+                              )),
+                        ],
+                      ),
+                    )),
+              ],
+            )));
   }
 }
 
@@ -137,7 +163,7 @@ class _ButtonCal extends StatelessWidget {
     return ElevatedButton(
       style: value == '='
           ? ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.green),
+              backgroundColor: MaterialStateProperty.all(Colors.green.shade400),
             )
           : null,
       onPressed: onPressed,

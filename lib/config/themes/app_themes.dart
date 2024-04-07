@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 const colorList = [
   Colors.blue,
@@ -7,6 +8,11 @@ const colorList = [
   Colors.yellow,
   Colors.purple,
   Colors.orange,
+  Colors.pink,
+  Colors.brown,
+  Colors.cyan,
+  Colors.teal,
+  Colors.indigo,
 ];
 
 class AppTheme {

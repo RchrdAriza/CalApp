@@ -19,7 +19,7 @@ class ThemeNotifier extends StateNotifier<AppTheme> {
     state = state.copyWith(isDarkMode: !state.isDarkMode);
   }
 
-  // void changeColor(int index) {
-  //   state = state.copyWith(selectedColor: index);
-  // }
+  void changeColor(int index) {
+    state = state.copyWith(selectedColor: index);
+  }
 }
